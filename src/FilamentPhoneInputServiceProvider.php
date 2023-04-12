@@ -2,17 +2,26 @@
 
 namespace Ysfkaya\FilamentPhoneInput;
 
-use Filament\PluginServiceProvider;
-use Illuminate\Support\Facades\Route;
 
-class FilamentPhoneInputServiceProvider extends PluginServiceProvider
+use Filament\Support\Assets\AlpineComponent;
+use Filament\Support\Assets\AssetManager;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
+
+class FilamentPhoneInputServiceProvider extends PackageServiceProvider
 {
-    public static string $name = 'filament-phone-input';
 
-    protected array $styles = [
-        'filament-phone-input' => __DIR__.'/../dist/css/filament-phone-input.css',
-        'intl-tel-input' => __DIR__.'/../dist/css/intl-tel-input.css',
-    ];
+    public function configurePackage(Package $package): void
+    {
+        $package
+            ->name('filament-phone-input')
+            ->hasViews()
+            ->hasRoute('web');
+    }
+
+
 
     protected array $beforeCoreScripts = [
         'filament-phone-input' => __DIR__.'/../dist/js/filament-phone-input.js',
@@ -22,16 +31,16 @@ class FilamentPhoneInputServiceProvider extends PluginServiceProvider
         'intl-tel-input-utils' => __DIR__.'/../dist/intl-tel-input/utils.js',
     ];
 
-    public function packageBooted(): void
+    public function packageRegistered(): void
     {
-        parent::packageBooted();
+        $this->app->resolving(AssetManager::class, function () {
+            \Filament\Support\Facades\FilamentAsset::register([
+                Css::make('filament-phone-input', __DIR__.'/../dist/css/filament-phone-input.css'),
+                Css::make('intl-tel-input', __DIR__.'/../dist/css/intl-tel-input.css'),
+                AlpineComponent::make('filament-phone-input', __DIR__.'/../dist/js/filament-phone-input.js'), //TODO compile to module
+                Js::make('intl-tel-input-utils', __DIR__.'/../dist/intl-tel-input/utils.js'),
+            ], 'tanthammar/filament-extras');
 
-        Route::get('/filament-phone-input-flags.png', function () {
-            return response()->file(__DIR__.'/../images/vendor/intl-tel-input/build/flags.png');
-        });
-
-        Route::get('/filament-phone-input-flags@2x.png', function () {
-            return response()->file(__DIR__.'/../images/vendor/intl-tel-input/build/flags@2x.png');
         });
     }
 }
